@@ -391,7 +391,7 @@ def gamma_soft_dtw(dataset, n_samples=100, random_state=None):
 def lb_keogh(ts_query, ts_candidate=None, radius=1, envelope_candidate=None):
     """Compute LB_Keogh.
 
-    LB_Keogh was originally presented in [1]_.
+    LB_Keogh was originally presented in [1]_ and the multivariate extention in [2]_.
 
     Parameters
     ----------
@@ -435,25 +435,27 @@ def lb_keogh(ts_query, ts_candidate=None, radius=1, envelope_candidate=None):
     ----------
     .. [1] Keogh, E. Exact indexing of dynamic time warping. In International Conference on Very Large Data Bases, 2002.
        pp 406-417.
+    .. [2] Rath, T. M., & Manmatha, R. Lower-bounding of dynamic time warping distances for multivariate time series. University of Massachusetts Amherst Technical Report MM, 40, 2002.
     """
     if ts_candidate is None:
         envelope_down, envelope_up = envelope_candidate
     else:
-        ts_candidate = to_time_series(ts_candidate)
-        assert ts_candidate.shape[1] == 1, "LB_Keogh is available only for monodimensional time series"
+        ts_candidate = to_time_series(ts_candidate)       
         envelope_down, envelope_up = lb_envelope(ts_candidate, radius)
     ts_query = to_time_series(ts_query)
-    assert ts_query.shape[1] == 1, "LB_Keogh is available only for monodimensional time series"
-    indices_up = ts_query[:, 0] > envelope_up[:, 0]
-    indices_down = ts_query[:, 0] < envelope_down[:, 0]
-    return numpy.sqrt(numpy.linalg.norm(ts_query[indices_up, 0] - envelope_up[indices_up, 0]) ** 2 + \
-                      numpy.linalg.norm(ts_query[indices_down, 0] - envelope_down[indices_down, 0]) ** 2)
+    assert ts_query.shape[1] == ts_candidate.shape[1] , "LB_Keogh is available only for time series with same dimensionality"
+    
+    indices_up = ts_query[:, :] > envelope_up[:, :]
+    indices_down = ts_query[:, :] < envelope_down[:, :]
+    return numpy.sqrt(numpy.linalg.norm(ts_query[indices_up] - envelope_up[indices_up]) ** 2 + \
+                          numpy.linalg.norm(ts_query[indices_down] - envelope_down[indices_down]) ** 2)
+            
 
 
 def lb_envelope(ts, radius=1):
     """Compute time-series envelope as required by LB_Keogh.
 
-    LB_Keogh was originally presented in [1]_.
+    LB_Keogh was originally presented in [1]_  and the multivariate extention in [2]_.
 
     Parameters
     ----------
@@ -495,6 +497,7 @@ def lb_envelope(ts, radius=1):
     ----------
     .. [1] Keogh, E. Exact indexing of dynamic time warping. In International Conference on Very Large Data Bases, 2002.
        pp 406-417.
+    .. [2] Rath, T. M., & Manmatha, R. Lower-bounding of dynamic time warping distances for multivariate time series. University of Massachusetts Amherst Technical Report MM, 40, 2002.
     """
     return cylb_envelope(to_time_series(ts), radius=radius)
 
