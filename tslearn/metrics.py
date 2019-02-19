@@ -443,7 +443,7 @@ def lb_keogh(ts_query, ts_candidate=None, radius=1, envelope_candidate=None):
         ts_candidate = to_time_series(ts_candidate)       
         envelope_down, envelope_up = lb_envelope(ts_candidate, radius)
     ts_query = to_time_series(ts_query)
-    assert ts_query.shape[1] == ts_candidate.shape[1] , "LB_Keogh is available only for time series with same dimensionality"
+    assert ts_query.shape[1] == len(envelope_down[0]) ==  len(envelope_up[0]) , "LB_Keogh is available only for time series with same dimensionality"
     
     indices_up = ts_query[:, :] > envelope_up[:, :]
     indices_down = ts_query[:, :] < envelope_down[:, :]
